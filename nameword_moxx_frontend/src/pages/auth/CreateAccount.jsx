@@ -5,52 +5,26 @@ import { google, telegram } from "../../components/common/icons";
 import { FiEye , FiEyeOff  } from "react-icons/fi";
 import { useState } from "react";
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, Link } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { registerSchema } from '../../utils/validationSchemas';
 
 const CreateAccount = () => {    
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
     const [loading, setLoading] = useState(false);
     
     const { register, error, clearError } = useAuth();
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Clear error when user starts typing
-        if (error) clearError();
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match');
-            return;
-        }
-
+    const handleSubmit = async (values, { setSubmitting }) => {
         setLoading(true);
         try {
             const userData = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                password: formData.password
+                firstName: values.firstName,
+                lastName: values.lastName,
+                email: values.email,
+                password: values.password
             };
             
             await register(userData);
@@ -60,13 +34,14 @@ const CreateAccount = () => {
             console.error('Registration failed:', error);
         } finally {
             setLoading(false);
+            setSubmitting(false);
         }
     };
 
     return (
-        <div> 
+        <div>
             <AuthNavbar />
-            
+
             {/* create account */}
             <div className='login-section'>
                 <div className='inner-section'>
@@ -75,154 +50,197 @@ const CreateAccount = () => {
 
                     {/* Error message */}
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-md">
-                            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg shadow-sm">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
+                                </div>
+                            </div>
                         </div>
                     )}
                     
-                    <form onSubmit={handleSubmit}>
-                        {/* First Name */}
-                        <div className="relative">
-                            <input
-                                type="text"
-                                name="firstName"
-                                className="input-field peer"
-                                id="firstName"
-                                value={formData.firstName}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                            <label
-                                htmlFor="firstName"
-                                className={`absolute left-5 transition-all font-medium ${formData.firstName ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                            >
-                                First Name *
-                            </label>
-                        </div>
-
-                        {/* Last Name */}
-                        <div className="relative">
-                            <input
-                                type="text"
-                                name="lastName"
-                                className="input-field peer"
-                                id="lastName"
-                                value={formData.lastName}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                            <label
-                                htmlFor="lastName"
-                                className={`absolute left-5 transition-all font-medium ${formData.lastName ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                            >
-                                Last Name *
-                            </label>
-                        </div>
-
-                        {/* Email */}
-                        <div className="relative">
-                            <input
-                                type="email"
-                                name="email"
-                                className="input-field peer"
-                                id="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                            <label
-                                htmlFor="email"
-                                className={`absolute left-5 transition-all font-medium ${formData.email ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                            >
-                                Email Address *
-                            </label>
-                        </div>
-
-                        {/* Password */}
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                className="input-field peer"
-                                id="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-5 top-5 text-primary dark:text-gray-500"
-                            >
-                                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                            </button>
-                            <label
-                                htmlFor="password"
-                                className={`absolute left-5 transition-all font-medium ${formData.password ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500'} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                            >
-                                Password *
-                            </label>
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div className="relative">
-                            <input
-                                type={showConfirmPassword ? "text" : "password"}
-                                name="confirmPassword"
-                                className="input-field peer"
-                                id="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-5 top-5 text-primary dark:text-gray-500"
-                            >
-                                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                            </button>
-                            <label
-                                htmlFor="confirmPassword"
-                                className={`absolute left-5 transition-all font-medium ${formData.confirmPassword ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500'} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                            >
-                                Confirm Password *
-                            </label>
-                        </div>
-                        
-                        {/* Terms */}
-                        <div>
-                            <p className="text-13 text-primary dark:text-gray-500 font-medium mb-0">By clicking button below you agree with our</p>
-                            <p className='text-13 text-primary dark:text-gray-500 font-medium'>
-                                <a href="#" className="text-darkbtn dark:text-gray-200 hover:underline">Terms of Service</a>
-                                <span className='mx-1'>and</span>
-                                <a href="#" className="text-darkbtn dark:text-gray-200 hover:underline">Privacy Policy</a>
-                            </p>
-                        </div>
-
-                        {/* Submit Button */}
-                        <button 
-                            type="submit"
-                            className='add-to-cart max-w-full'
-                            disabled={loading || !formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword}
-                        >
-                            {loading ? (
-                                <div className="flex items-center justify-center">
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                    Creating Account...
+                                        <Formik
+                        initialValues={{ 
+                            firstName: '', 
+                            lastName: '', 
+                            email: '', 
+                            password: '', 
+                            confirmPassword: '' 
+                        }}
+                        validationSchema={registerSchema}
+                        onSubmit={handleSubmit}
+                    >
+                        {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
+                            <Form>
+                                {/* First Name */}
+                                <div className="relative">
+                                    <Field
+                                        type="text"
+                                        name="firstName"
+                                        className={`input-field peer ${errors.firstName && touched.firstName ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="firstName"
+                                        value={values.firstName}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                    />
+                                    <label
+                                        htmlFor="firstName"
+                                        className={`absolute left-5 transition-all font-medium ${values.firstName ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        First Name *
+                                    </label>
+                                    <ErrorMessage name="firstName" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
                                 </div>
-                            ) : (
-                                <>
-                                    Create Account <TbArrowRight size={18} />
-                                </>
-                            )}
-                        </button>
-                    </form>
+
+                                {/* Last Name */}
+                                <div className="relative">
+                                    <Field
+                                        type="text"
+                                        name="lastName"
+                                        className={`input-field peer ${errors.lastName && touched.lastName ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="lastName"
+                                        value={values.lastName}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                    />
+                                    <label
+                                        htmlFor="lastName"
+                                        className={`absolute left-5 transition-all font-medium ${values.lastName ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        Last Name *
+                                    </label>
+                                    <ErrorMessage name="lastName" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                </div>
+
+                                {/* Email */}
+                                <div className="relative">
+                                    <Field
+                                        type="email"
+                                        name="email"
+                                        className={`input-field peer ${errors.email && touched.email ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="email"
+                                        value={values.email}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                    />
+                                    <label
+                                        htmlFor="email"
+                                        className={`absolute left-5 transition-all font-medium ${values.email ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        Email Address *
+                                    </label>
+                                    <ErrorMessage name="email" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                </div>
+
+                                {/* Password */}
+                                <div className="relative">
+                                    <Field
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        className={`input-field peer ${errors.password && touched.password ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="password"
+                                        value={values.password}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-5 top-5 text-primary dark:text-gray-500"
+                                    >
+                                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                    <label
+                                        htmlFor="password"
+                                        className={`absolute left-5 transition-all font-medium ${values.password ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500'} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        Password *
+                                    </label>
+                                    <ErrorMessage name="password" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                </div>
+
+                                {/* Confirm Password */}
+                                <div className="relative">
+                                    <Field
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        className={`input-field peer ${errors.confirmPassword && touched.confirmPassword ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="confirmPassword"
+                                        value={values.confirmPassword}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-5 top-5 text-primary dark:text-gray-500"
+                                    >
+                                        {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                    <label
+                                        htmlFor="confirmPassword"
+                                        className={`absolute left-5 transition-all font-medium ${values.confirmPassword ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500'} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        Confirm Password *
+                                    </label>
+                                    <ErrorMessage name="confirmPassword" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                </div>
+                                
+                                {/* Terms */}
+                                <div>
+                                    <p className="text-13 text-primary dark:text-gray-500 font-medium mb-0">By clicking button below you agree with our</p>
+                                    <p className='text-13 text-primary dark:text-gray-500 font-medium'>
+                                        <a href="#" className="text-darkbtn dark:text-gray-200 hover:underline">Terms of Service</a>
+                                        <span className='mx-1'>and</span>
+                                        <a href="#" className="text-darkbtn dark:text-gray-200 hover:underline">Privacy Policy</a>
+                                    </p>
+                                </div>
+
+                                {/* Submit Button */}
+                                <button 
+                                    type="submit"
+                                    className='add-to-cart max-w-full'
+                                    disabled={loading || isSubmitting || !values.firstName || !values.lastName || !values.email || !values.password || !values.confirmPassword}
+                                >
+                                    {loading ? (
+                                        <div className="flex items-center justify-center">
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                            Creating Account...
+                                        </div>
+                                    ) : (
+                                        <>
+                                            Create Account <TbArrowRight size={18} />
+                                        </>
+                                    )}
+                                </button>
+                            </Form>
+                        )}
+                    </Formik>
 
                     {/* Divider */}
                     <div className="flex items-center my-2">

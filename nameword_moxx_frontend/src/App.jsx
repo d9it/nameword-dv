@@ -10,7 +10,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Router/>
+    <Router/>
       </AuthProvider>
     </ErrorBoundary>
   )

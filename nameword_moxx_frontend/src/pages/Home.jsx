@@ -94,7 +94,7 @@ const Home = () => {
 									{searchLoading ? (
 										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
 									) : (
-										<TbSearch size={14} />
+									<TbSearch size={14} />
 									)}
 								</button>
 							</div>
