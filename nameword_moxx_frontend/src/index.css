@@ -1,0 +1,259 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #191339;
+  --color-secondary: #79768A;
+  --color-darkbtn: #34228E;
+  --color-darkbtn-hover: #361EAD;
+  --color-darkbtn-active: #2D169E;
+  --color-darkbtn-100: #EFEDF8;
+  --color-darkbtn-200: #A197D2;
+  --color-lightgray: #EAE8F4;
+  --color-lightgray-100: #E3E3E3;
+  --color-lightgray-200: #F7F6FB;
+  --color-lightgray-300: #D1CDE4;
+  --color-lightgray-500: #7E7A93;
+  --color-lightgray-600: #9690B4;
+  --color-active: #928FA1;
+  --color-beige: #F7F4EC;
+  --color-active-border: #5C5776;
+  --color-hover: #F8F7FF;
+  --color-tealdark: #16979A;
+  --color-teal-hover: #22b2b5;
+  --color-stokecolor: #DADADA;
+  --color-save-badge: #FFF3AF;
+  --color-skydark: #3EBFD8;
+  --color-slatelight: #F8F8F8;
+  --color-nodata: #9DABAB;
+  --color-disable: #AAA4C9;
+  --color-disable-stoke: #B1ACCB;
+  --color-warning: #DD3B3D;
+  --color-sucess-50: #EBFFEC;
+  --color-sucess-100: #CAF0CC;
+  --color-sucess-400: #3CB665;
+
+
+  --font-poppins: "Poppins", sans-serif;
+
+  --text-15: 15px;
+  --text-13: 13px;
+
+}
+
+body{
+  @apply font-poppins dark:bg-gray-900;
+}
+
+/*------------------------ start css --------------------*/
+.navlink{
+    @apply text-primary hover:text-darkbtn dark:text-white hover:dark:text-gray-500 text-15 font-medium;
+}
+.auth-navlink{
+    @apply text-primary hover:text-darkbtn dark:text-white hover:dark:text-gray-500 text-13 font-medium flex items-center gap-2;
+}
+.language-menu{
+	@apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase border border-lightgray focus:border-lightgray-300 dark:border-gray-800 focus:dark:border-gray-800 rounded-md px-2.5 py-2 ;
+}
+.dropdown {
+    @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded border border-lightgray dark:border-gray-800 focus:dark:border-gray-800 z-50 w-auto px-2.5 py-2 gap-2 flex flex-col;
+}
+.dropdown-menu{
+	@apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase active:text-active hover:text-active ;
+}
+
+/*----- footer -------*/
+.footer{
+	@apply max-w-11/12 mx-auto p-10;
+}
+.footer-contact{
+	@apply text-darkbtn hover:text-darkbtn-hover dark:text-gray-500 hover:dark:text-white text-15 font-medium gap-2 flex items-center mb-2;
+}
+.footer-menu{
+	@apply text-base font-medium text-lightgray-600 mb-8;
+}
+.footer-link{
+	@apply text-primary hover:text-darkbtn-hover dark:text-gray-500 hover:dark:text-white font-medium text-15;
+}
+.social-link{
+	@apply text-darkbtn hover:text-darkbtn-hover dark:text-gray-500 hover:dark:text-white text-2xl;
+}
+
+/*---------------- search-section --------------*/
+.search-section{
+	@apply bg-beige dark:bg-gray-800 rounded-4xl min-h-[80vh] flex justify-center items-center relative lg:py-20 md:py-16 sm:py-14 py-10 z-[1];
+}
+.globe-image{
+	@apply absolute right-0 top-0 -z-[1] ;
+}
+.searcharea h2{
+	@apply text-primary dark:text-white text-3xl font-medium;
+}
+.search-input{
+	@apply bg-white dark:bg-gray-900 border border-active-border focus:border-active-border dark:border-gray-800 focus:dark:border-gray-800 outline-0 rounded-md h-16 px-8 py-4 text-15 text-primary placeholder:text-primary/50 dark:text-white dark:placeholder:text-gray-500;
+}
+.btn-blue{
+	@apply bg-darkbtn hover:bg-darkbtn-hover active:bg-darkbtn-active text-white rounded-md w-48 flex justify-center items-center h-16 cursor-pointer;
+}
+.search-list{
+	@apply p-5 bg-white dark:bg-gray-900 rounded-md shadow-[0_2px_6px_rgba(0,0,0,0.10)] absolute top-16 mt-2 w-full; 
+}
+.search-list ul li a{
+	@apply text-left text-primary dark:text-gray-500 text-15 font-medium p-4 hover:bg-hover dark:hover:bg-gray-800 dark:hover:text-white block rounded;
+}
+
+
+.domain-card{
+  @apply py-5 px-7 bg-white dark:bg-gray-900 rounded-md;
+}
+.domain-card.no-available{
+  @apply py-5 px-7 bg-stokecolor h-20 overflow-hidden dark:bg-gray-900 rounded-md;
+}
+.domain-card .card-title{
+  @apply text-primary dark:text-white font-medium text-lg;
+}
+.btn-teal{
+  @apply text-white bg-tealdark hover:bg-teal-hover px-3 py-2 rounded font-medium text-13 cursor-pointer;
+}
+.no-available .btn-teal{
+  @apply text-white bg-nodata hover:bg-nodata px-3 py-2 rounded font-medium text-13 cursor-pointer;
+}
+.btn-sky{
+  @apply text-white bg-skydark hover:bg-teal-hover px-3 py-2 rounded font-medium text-13 cursor-pointer;
+}
+.card-divider{
+  @apply border-stokecolor dark:border-gray-700;
+}
+.price-tag{
+  @apply text-tealdark text-2xl font-medium flex items-center gap-2;
+}
+.price-tag span{
+  @apply text-primary dark:text-gray-400 font-medium text-xl line-through;
+}
+.save-lable{
+  @apply bg-save-badge px-1 py-0.5 text-sm font-medium;
+}
+.bg-tealdark{
+  @apply bg-tealdark px-1 py-0.5 text-xs font-medium text-white;
+}
+.add-to-cart{
+	@apply bg-darkbtn hover:bg-darkbtn-hover active:bg-darkbtn-active text-white rounded-md min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-medium ;
+}
+.btn-text-link{
+	@apply bg-white hover:bg-darkbtn-hover active:bg-darkbtn-active text-darkbtn rounded-md w-40 h-14 flex justify-center items-center gap-2.5 text-13 font-medium hover:text-white ;
+}
+.btn-outline{
+	@apply border border-darkbtn text-darkbtn hover:bg-darkbtn-hover hover:text-white rounded-md min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-white dark:hover:border-darkbtn text-13 font-medium ;
+}
+
+/*---------------- domain tablist --------------------*/
+.tablist{
+  @apply flex w-full overflow-auto mb-3 gap-1;
+}
+.tablist li a{
+  @apply border border-darkbtn-100 min-w-[110px] h-10 flex justify-center items-center text-darkbtn dark:text-gray-500 text-xs font-medium rounded-md hover:border-darkbtn-200 active:border-darkbtn-200 dark:border-gray-800 dark:hover:border-darkbtn-200;
+}
+.tablist li a.active{
+  @apply border-darkbtn-200;
+}
+.domain-list .card-title{
+  @apply font-medium;
+}
+.domainlist-detail .price-tag{
+  @apply text-xl;
+}
+.domainlist-detail .price-tag span{
+  @apply text-base;
+}
+
+/*------------------ Contact section css --------------*/
+.conatct-info{
+  @apply bg-slatelight dark:bg-gray-800 rounded-4xl;
+  background-image: url(../src/assets/images/contact-bg.png);
+  background-position: bottom right;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.contact-title{
+  @apply text-primary dark:text-white text-5xl font-medium;
+}
+.contact-card{
+  @apply bg-white dark:bg-gray-900 lg:p-9 md:p-8 sm:p-7 p-6 rounded-md flex flex-col items-start justify-start gap-14; 
+}
+.contact-card p {
+  @apply text-primary dark:text-white font-medium text-lg;
+}
+.testimonial p{
+  @apply text-3xl font-medium text-primary dark:text-gray-500;
+}
+.select-domain{
+  @apply border border-stokecolor dark:border-gray-700 rounded-md p-2 -mt-0.5 bg-white dark:bg-gray-900;
+}
+.select-domain .add-to-cart{
+  @apply w-[55px];
+}
+.select-domain .btn-outline.add-domain{
+  @apply border-darkbtn-200 dark:border-gray-700 rounded-md w-48 text-13 font-medium;
+} 
+
+
+/*------------ view cart sidebar popup --------------*/
+.view-cart{
+  @apply w-xl fixed h-screen overflow-hidden p-6 bg-white dark:bg-gray-900 shadow-xl dark:border-l dark:border-gray-700 right-0 top-0 z-20;
+}
+.all-cart-items{
+  @apply w-full h-[calc(100%-125px)] overflow-auto;
+}
+.heading-title{
+  @apply text-primary dark:text-white text-3xl font-medium;
+}
+.cart-card{
+  @apply border border-stokecolor dark:border-gray-700 rounded-md px-7 py-5;
+}
+.cart-title{
+  @apply font-medium text-secondary;
+}
+.term-select{
+  @apply cursor-pointer rounded-lg border border-active-border px-4 py-2 bg-white dark:bg-gray-800;
+}
+.dropdown-select{
+  @apply absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-active-border dark:border-active-border bg-white dark:bg-gray-900 shadow-md;
+}
+
+
+/*------------ auth pages ---------------*/
+.login-section{
+  @apply min-h-[70vh] flex justify-center items-start;
+}
+.inner-section{
+  @apply w-[480px] border border-stokecolor dark:border-gray-700 rounded-md mt-16 mb-8 p-7 mx-auto flex flex-col gap-2.5;
+}
+.add-to-cart.disable{
+  @apply bg-disable;
+}
+.btn-outline.disable{
+  @apply border-disable-stoke dark:border-gray-700;
+}
+.input-field{
+  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 px-5 pt-6 pb-2 text-13 font-medium rounded-md w-full focus:outline-0;
+}
+.input-error .input-field{
+  @apply border-warning text-warning;
+}
+.check-email-card{
+  @apply border border-stokecolor dark:border-gray-700 rounded p-4;
+}
+.sucess-card{
+  @apply border border-sucess-100 bg-sucess-50 rounded p-4 mb-3;
+}
+.otp-input{
+  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 w-14 h-16 text-center text-3xl font-medium rounded focus:outline-0;
+}
+.after-code .otp-input{
+  @apply border-stokecolor dark:border-gray-700 text-secondary;
+}
+.wrong-otp .otp-input{
+  @apply border-warning text-warning;
+}
