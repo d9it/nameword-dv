@@ -8,23 +8,26 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { registerSchema } from '../../utils/validationSchemas';
+import { MdCheck } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
 
 const CreateAccount = () => {    
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [profileImg, setProfileImg] = useState(null);
     
-    const { register, error, clearError } = useAuth();
+    const { register, error, clearError, loading } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = async (values, { setSubmitting }) => {
-        setLoading(true);
+    const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
         try {
             const userData = {
                 firstName: values.firstName,
                 lastName: values.lastName,
                 email: values.email,
-                password: values.password
+                password: values.password,
+                name: `${values.firstName} ${values.lastName}`,
+                ...(profileImg && { profileImg })
             };
             
             await register(userData);
@@ -32,9 +35,22 @@ const CreateAccount = () => {
             navigate('/');
         } catch (error) {
             console.error('Registration failed:', error);
+            
+            // Handle specific field errors from backend
+            if (error.response?.data?.errors) {
+                error.response.data.errors.forEach(err => {
+                    setFieldError(err.path, err.msg);
+                });
+            }
         } finally {
-            setLoading(false);
             setSubmitting(false);
+        }
+    };
+
+    const handleProfileImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setProfileImg(file);
         }
     };
 
@@ -64,7 +80,7 @@ const CreateAccount = () => {
                         </div>
                     )}
                     
-                                        <Formik
+                    <Formik
                         initialValues={{ 
                             firstName: '', 
                             lastName: '', 
@@ -75,10 +91,10 @@ const CreateAccount = () => {
                         validationSchema={registerSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
-                            <Form>
+                        {({ values, errors, touched, handleChange, handleBlur, isSubmitting, isValid, dirty }) => (
+                            <Form className='gap-2.5 flex flex-col w-full'>
                                 {/* First Name */}
-                                <div className="relative">
+                                <div className={`relative ${errors.firstName ? "input-error" : ""}`}>
                                     <Field
                                         type="text"
                                         name="firstName"
@@ -98,11 +114,11 @@ const CreateAccount = () => {
                                     >
                                         First Name *
                                     </label>
-                                    <ErrorMessage name="firstName" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                    <ErrorMessage name="firstName" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
                                 </div>
 
                                 {/* Last Name */}
-                                <div className="relative">
+                                <div className={`relative ${errors.lastName ? "input-error" : ""}`}>
                                     <Field
                                         type="text"
                                         name="lastName"
@@ -122,11 +138,11 @@ const CreateAccount = () => {
                                     >
                                         Last Name *
                                     </label>
-                                    <ErrorMessage name="lastName" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                    <ErrorMessage name="lastName" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
                                 </div>
 
                                 {/* Email */}
-                                <div className="relative">
+                                <div className={`relative ${errors.email ? "input-error" : ""}`}>
                                     <Field
                                         type="email"
                                         name="email"
@@ -146,11 +162,35 @@ const CreateAccount = () => {
                                     >
                                         Email Address *
                                     </label>
-                                    <ErrorMessage name="email" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                    <ErrorMessage name="email" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
                                 </div>
 
-                                {/* Password */}
+                                {/* Profile Image */}
                                 <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleProfileImageChange}
+                                        className="hidden"
+                                        id="profileImg"
+                                        disabled={loading}
+                                    />
+                                    <label
+                                        htmlFor="profileImg"
+                                        className="block w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                                    >
+                                        <div className="flex flex-col items-center">
+                                            <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {profileImg ? profileImg.name : 'Upload Profile Image (Optional)'}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div className={`relative ${errors.password ? "input-error" : ""}`}>
                                     <Field
                                         type={showPassword ? "text" : "password"}
                                         name="password"
@@ -177,11 +217,85 @@ const CreateAccount = () => {
                                     >
                                         Password *
                                     </label>
-                                    <ErrorMessage name="password" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                    <ErrorMessage name="password" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
                                 </div>
 
-                                {/* Confirm Password */}
-                                <div className="relative">
+                                {(errors.password || values.password) &&
+                                    <div>
+                                        {/* strong password */}
+                                         {!errors.password && values.password &&
+                                        <div className="border border-stokecolor rounded p-4 space-y-1.5 w-full">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1">
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                    <div className="w-5 h-1 rounded-full bg-tealdark" />
+                                                </div>
+                                                <span className="text-tealdark font-medium text-13">Strong</span>
+                                            </div>
+                                            <ul className="space-y-1">
+                                                <li className="flex items-start gap-1.5">
+                                                    <span className="text-primary dark:text-gray-500">
+                                                        <IoClose className='w-4 h-4 flex-none' />
+                                                    </span>
+                                                    <span className="text-xs text-primary dark:text-gray-500 font-medium line-through">
+                                                        The password must contain at least 8 characters.
+                                                    </span>
+                                                </li>
+                                                <li className="flex items-start gap-1.5">
+                                                    <span className="text-primary dark:text-gray-500">
+                                                        <IoClose className='w-4 h-4 flex-none' />
+                                                    </span>
+                                                    <span className="text-xs text-primary dark:text-gray-500 font-medium line-through">
+                                                        There should be at least one special symbol
+                                                    </span>
+                                                </li>
+                                            </ul>
+                                        </div>}
+
+                                        {/* weak password */}
+                                        {errors.password && values.password &&
+                                        <div className="border border-stokecolor rounded p-4 space-y-1.5 w-full">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1">
+                                                    <div className="w-5 h-1 rounded-full bg-warning" />
+                                                    <div className="w-5 h-1 rounded-full bg-warning" />
+                                                    <div className="w-5 h-1 rounded-full bg-warning" />
+                                                    <div className="w-5 h-1 rounded-full bg-lightgray" />
+                                                    <div className="w-5 h-1 rounded-full bg-lightgray" />
+                                                    <div className="w-5 h-1 rounded-full bg-lightgray" />
+                                                    <div className="w-5 h-1 rounded-full bg-lightgray" />
+                                                </div>
+                                                <span className="text-warning font-medium text-13">Weak</span>
+                                            </div>
+
+                                            <ul className="space-y-1">
+                                                <li className="flex items-start gap-1.5">
+                                                    <span className="text-primary dark:text-gray-500">
+                                                        <MdCheck className='w-4 h-4 flex-none' />
+                                                    </span>
+                                                    <span className="text-xs text-primary dark:text-gray-500 font-medium">
+                                                        The password must contain at least 8 characters.
+                                                    </span>
+                                                </li>
+                                                <li className="flex items-start gap-1.5">
+                                                    <span className="text-primary dark:text-gray-500">
+                                                        <MdCheck className='w-4 h-4 flex-none' />
+                                                    </span>
+                                                    <span className="text-xs text-primary dark:text-gray-500 font-medium">
+                                                        There should be at least one special symbol
+                                                    </span>
+                                                </li>
+                                            </ul>
+                                        </div>}
+                                    </div>
+                                }
+
+                                <div className={`relative ${errors.confirmPassword ? "input-error" : ""}`}>
                                     <Field
                                         type={showConfirmPassword ? "text" : "password"}
                                         name="confirmPassword"
@@ -208,7 +322,7 @@ const CreateAccount = () => {
                                     >
                                         Confirm Password *
                                     </label>
-                                    <ErrorMessage name="confirmPassword" component="p" className="mt-1 text-xs text-red-600 dark:text-red-400" />
+                                    <ErrorMessage name="confirmPassword" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
                                 </div>
                                 
                                 {/* Terms */}
@@ -224,17 +338,18 @@ const CreateAccount = () => {
                                 {/* Submit Button */}
                                 <button 
                                     type="submit"
-                                    className='add-to-cart max-w-full'
-                                    disabled={loading || isSubmitting || !values.firstName || !values.lastName || !values.email || !values.password || !values.confirmPassword}
+                                    disabled={!isValid || !dirty || isSubmitting || loading}
+                                    className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
-                                        <div className="flex items-center justify-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                             Creating Account...
                                         </div>
                                     ) : (
                                         <>
-                                            Create Account <TbArrowRight size={18} />
+                                            Create Account
+                                            <TbArrowRight size={18} />
                                         </>
                                     )}
                                 </button>

@@ -22,17 +22,17 @@ export const AuthProvider = ({ children }) => {
   // Check if user is authenticated on app load
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        try {
-          const userData = await authAPI.getCurrentUser();
-          setUser(userData.data);
-        } catch (error) {
-          console.error('Failed to get current user:', error);
-          localStorage.removeItem('authToken');
-        }
+      try {
+        const userData = await authAPI.getCurrentUser();
+        setUser(userData.data);
+      } catch (error) {
+        console.error('Failed to get current user:', error);
+        // Clear any stored tokens on error
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkAuth();
@@ -42,18 +42,22 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setError(null);
+      setLoading(true);
       const response = await authAPI.login(credentials);
       
-      if (response.data?.token) {
-        localStorage.setItem('authToken', response.data.token);
+      if (response.data) {
         setUser(response.data);
+        // Store user data in session storage for persistence
+        sessionStorage.setItem('user', JSON.stringify(response.data));
       }
       
       return response;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
       setError(errorMessage);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,18 +65,22 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setError(null);
+      setLoading(true);
       const response = await authAPI.register(userData);
       
-      if (response.data?.token) {
-        localStorage.setItem('authToken', response.data.token);
+      if (response.data) {
         setUser(response.data);
+        // Store user data in session storage for persistence
+        sessionStorage.setItem('user', JSON.stringify(response.data));
       }
       
       return response;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       setError(errorMessage);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,15 +91,111 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('authToken');
       setUser(null);
       setError(null);
+      // Clear stored data
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
     }
   };
 
-  // Update user profile
-  const updateUser = (userData) => {
-    setUser(userData);
+  // Reset password function
+  const resetPassword = async (resetData) => {
+    try {
+      setError(null);
+      const response = await authAPI.resetPassword(resetData);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Password reset failed';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Send email verification code
+  const sendEmailCode = async (email) => {
+    try {
+      setError(null);
+      const response = await authAPI.sendEmailCode(email);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send verification code';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Verify email code
+  const verifyEmailCode = async (verificationData) => {
+    try {
+      setError(null);
+      const response = await authAPI.verifyEmailCode(verificationData);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Email verification failed';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Send mobile OTP
+  const sendMobileOtp = async (mobileData) => {
+    try {
+      setError(null);
+      const response = await authAPI.sendMobileOtp(mobileData);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send OTP';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Verify mobile OTP
+  const verifyMobileOtp = async (otpData) => {
+    try {
+      setError(null);
+      const response = await authAPI.verifyMobileOtp(otpData);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'OTP verification failed';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Change password
+  const changePassword = async (passwordData) => {
+    try {
+      setError(null);
+      const response = await authAPI.changePassword(passwordData);
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Password change failed';
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  // Update user details
+  const updateUserDetails = async (userData) => {
+    try {
+      setError(null);
+      const response = await authAPI.updateUserDetails(userData);
+      
+      // Update local user state if successful
+      if (response.data) {
+        setUser(response.data);
+        sessionStorage.setItem('user', JSON.stringify(response.data));
+      }
+      
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update user details';
+      setError(errorMessage);
+      throw error;
+    }
   };
 
   // Clear error
@@ -99,18 +203,20 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
-  // Check if user is authenticated
-  const isAuthenticated = !!user;
-
   const value = {
     user,
     loading,
     error,
-    isAuthenticated,
     login,
     register,
     logout,
-    updateUser,
+    resetPassword,
+    sendEmailCode,
+    verifyEmailCode,
+    sendMobileOtp,
+    verifyMobileOtp,
+    changePassword,
+    updateUserDetails,
     clearError,
   };
 

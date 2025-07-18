@@ -1,130 +1,235 @@
 import AuthNavbar from '../../components/layout/AuthNavbar';
 import AuthFooter from '../../components/layout/AuthFooter';
-import { FaCheck } from "react-icons/fa6";
-import { IoClose } from "react-icons/io5";
-import { useState, useRef, useEffect } from "react";
+import { TbArrowRight  } from "react-icons/tb";
+import { useState } from "react";
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { otpSchema } from '../../utils/validationSchemas';
 
 const OtpCode = () => {    
-    const [timer, setTimer] = useState(40);
-    const inputsRef = useRef([]);
+    const [searchParams] = useSearchParams();
+    const [success, setSuccess] = useState(false);
+    const [resendLoading, setResendLoading] = useState(false);
+    
+    const { verifyEmailCode, sendEmailCode, error, clearError, loading } = useAuth();
+    const navigate = useNavigate();
 
-    // Timer countdown
-    useEffect(() => {
-        if (timer === 0) return;
-        const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-        return () => clearInterval(interval);
-    }, [timer]);
+    // Get email from URL params
+    const email = searchParams.get('email');
 
-    // Handle input auto-focus
-    const handleChange = (e, index) => {
-        const value = e.target.value;
-        if (value && index < 3) {
-        inputsRef.current[index + 1].focus();
+    const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
+        try {
+            await verifyEmailCode({
+                email: email || values.email,
+                code: values.otp
+            });
+            setSuccess(true);
+            // Redirect to login after a short delay
+            setTimeout(() => {
+                navigate('/signin');
+            }, 3000);
+        } catch (error) {
+            console.error('OTP verification failed:', error);
+            
+            // Handle specific field errors from backend
+            if (error.response?.data?.errors) {
+                error.response.data.errors.forEach(err => {
+                    setFieldError(err.path, err.msg);
+                });
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        try {
+            setResendLoading(true);
+            await sendEmailCode(email);
+            // Show success message
+            alert('Verification code sent successfully!');
+        } catch (error) {
+            console.error('Failed to resend code:', error);
+        } finally {
+            setResendLoading(false);
         }
     };
 
     return (
-        <div> 
+        <div>
             <AuthNavbar />
-            
-            {/* create account */}
+
+            {/* OTP verification */}
             <div className='login-section'>
                 <div className='inner-section'>
-                    <h2 className="heading-title">Enter your code</h2>
+                    <h2 className="heading-title">Verify Email</h2>
                     <hr className='card-divider my-3' />
-                    
-                    <div className='check-email-card'>
-                        <div className='flex items-start gap-3'>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className='text-primary dark:text-gray-500' xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.944 3.25H14.056C15.894 3.25 17.35 3.25 18.489 3.403C19.661 3.561 20.61 3.893 21.359 4.641C22.107 5.39 22.439 6.339 22.597 7.511C22.75 8.651 22.75 10.106 22.75 11.944V12.056C22.75 13.894 22.75 15.35 22.597 16.489C22.439 17.661 22.107 18.61 21.359 19.359C20.61 20.107 19.661 20.439 18.489 20.597C17.349 20.75 15.894 20.75 14.056 20.75H9.944C8.106 20.75 6.65 20.75 5.511 20.597C4.339 20.439 3.39 20.107 2.641 19.359C1.893 18.61 1.561 17.661 1.403 16.489C1.25 15.349 1.25 13.894 1.25 12.056V11.944C1.25 10.106 1.25 8.65 1.403 7.511C1.561 6.339 1.893 5.39 2.641 4.641C3.39 3.893 4.339 3.561 5.511 3.403C6.651 3.25 8.106 3.25 9.944 3.25ZM5.71 4.89C4.704 5.025 4.124 5.279 3.7 5.702C3.278 6.125 3.024 6.705 2.889 7.711C2.751 8.739 2.749 10.093 2.749 12C2.749 13.907 2.751 15.262 2.889 16.29C3.024 17.295 3.278 17.875 3.701 18.298C4.124 18.721 4.704 18.975 5.71 19.11C6.738 19.248 8.092 19.25 9.999 19.25H13.999C15.906 19.25 17.261 19.248 18.289 19.11C19.294 18.975 19.874 18.721 20.297 18.298C20.72 17.875 20.974 17.295 21.109 16.289C21.247 15.261 21.249 13.907 21.249 12C21.249 10.093 21.247 8.739 21.109 7.71C20.974 6.705 20.72 6.125 20.297 5.702C19.874 5.279 19.294 5.025 18.288 4.89C17.261 4.752 15.906 4.75 13.999 4.75H9.999C8.092 4.75 6.739 4.752 5.71 4.89ZM5.422 7.52C5.54934 7.36729 5.7321 7.27139 5.93013 7.25338C6.12815 7.23538 6.32521 7.29675 6.478 7.424L8.64 9.223C9.573 10 10.22 10.538 10.768 10.89C11.297 11.23 11.656 11.345 12.001 11.345C12.346 11.345 12.705 11.231 13.234 10.89C13.781 10.538 14.429 10 15.362 9.223L17.521 7.423C17.5967 7.35997 17.6841 7.31246 17.7782 7.2832C17.8722 7.25393 17.9711 7.24348 18.0692 7.25244C18.1673 7.2614 18.2627 7.2896 18.3499 7.33542C18.4371 7.38124 18.5145 7.44379 18.5775 7.5195C18.6405 7.59521 18.688 7.68259 18.7173 7.77665C18.7466 7.87072 18.757 7.96963 18.7481 8.06774C18.7391 8.16584 18.7109 8.26122 18.6651 8.34843C18.6193 8.43564 18.5567 8.51297 18.481 8.576L16.285 10.406C15.398 11.146 14.68 11.744 14.045 12.152C13.385 12.577 12.742 12.845 12.001 12.845C11.26 12.845 10.617 12.576 9.956 12.152C9.322 11.744 8.604 11.145 7.717 10.407L5.52 8.577C5.44424 8.51394 5.38165 8.43656 5.33582 8.34929C5.28998 8.26202 5.2618 8.16657 5.25289 8.0684C5.24397 7.97023 5.25449 7.87127 5.28385 7.77717C5.31322 7.68307 5.36084 7.59568 5.424 7.52" fill="currentcolor"/>
-                            </svg>
 
-                            <div className='flex flex-col'>
-                                <p className='text-base text-primary dark:text-gray-500 font-medium'>
-                                    Check your inblox
+                    {/* Success message */}
+                    {success && (
+                        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg shadow-sm">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                                        Email verified successfully! Redirecting to login...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Error message */}
+                    {error && (
+                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg shadow-sm">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info message */}
+                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg shadow-sm">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                    We've sent a verification code to {email || 'your email'}. Please check your inbox and enter the code below.
                                 </p>
-                                <p className='text-13 text-primary dark:text-gray-500 font-medium'>
-                                    We sent a code to jadensmith@gmail.com
-                                </p>
-                                <a href='/change-email' className='text-darkbtn dark:text-gray-200 hover:underline text-13 font-medium mt-2' >Change email</a>
                             </div>
                         </div>
                     </div>
+                    
+                    <Formik
+                        initialValues={{ 
+                            email: email || '', 
+                            otp: '' 
+                        }}
+                        validationSchema={otpSchema}
+                        onSubmit={handleSubmit}
+                        enableReinitialize
+                    >
+                        {({ values, errors, touched, handleChange, handleBlur, isSubmitting, isValid, dirty }) => (
+                            <Form className='gap-2.5 flex flex-col w-full'>
+                                {/* Email (if not provided in URL) */}
+                                {!email && (
+                                    <div className={`relative ${errors.email ? "input-error" : ""}`}>
+                                        <Field
+                                            type="email"
+                                            name="email"
+                                            className={`input-field peer ${errors.email && touched.email ? 'border-red-500 dark:border-red-400' : ''}`}
+                                            id="email"
+                                            value={values.email}
+                                            onChange={(e) => {
+                                                handleChange(e);
+                                                if (error) clearError();
+                                            }}
+                                            onBlur={handleBlur}
+                                            disabled={loading}
+                                        />
+                                        <label
+                                            htmlFor="email"
+                                            className={`absolute left-5 transition-all font-medium ${values.email ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500 '} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                        >
+                                            Email Address *
+                                        </label>
+                                        <ErrorMessage name="email" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
+                                    </div>
+                                )}
 
-                    {/* enter OTP code */}
-                    <div className="flex justify-start items-center gap-4 my-3">
-                        {[0, 1, 2, 3].map((i) => (
-                        <input
-                            key={i}
-                            type="text"
-                            maxLength={1}
-                            ref={(el) => (inputsRef.current[i] = el)}
-                            onChange={(e) => handleChange(e, i)}
-                            className="otp-input"
-                        />
-                        ))}
-                        <svg class="mr-3 -ml-1 size-6 animate-spin text-primary dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                                {/* OTP Code */}
+                                <div className={`relative ${errors.otp ? "input-error" : ""}`}>
+                                    <Field
+                                        type="text"
+                                        name="otp"
+                                        className={`input-field peer text-center text-lg tracking-widest ${errors.otp && touched.otp ? 'border-red-500 dark:border-red-400' : ''}`}
+                                        id="otp"
+                                        value={values.otp}
+                                        onChange={(e) => {
+                                            // Only allow numbers and limit to 6 digits
+                                            const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                            handleChange({
+                                                target: {
+                                                    name: 'otp',
+                                                    value: value
+                                                }
+                                            });
+                                            if (error) clearError();
+                                        }}
+                                        onBlur={handleBlur}
+                                        disabled={loading}
+                                        placeholder="000000"
+                                        maxLength="6"
+                                    />
+                                    <label
+                                        htmlFor="otp"
+                                        className={`absolute left-5 transition-all font-medium ${values.otp ? 'top-2 text-xs text-gray-600' : 'top-4 text-13 text-primary dark:text-gray-500'} peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
+                                    >
+                                        Verification Code *
+                                    </label>
+                                    <ErrorMessage name="otp" component="p" className="text-warning pl-5 text-xs font-medium mt-1" />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={!isValid || !dirty || isSubmitting || loading}
+                                    className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            Verifying...
+                                        </div>
+                                    ) : (
+                                        <>
+                                            Verify Email
+                                            <TbArrowRight size={18} />
+                                        </>
+                                    )}
+                                </button>
+                            </Form>
+                        )}
+                    </Formik>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Didn't receive the code?{' '}
+                            <button
+                                onClick={handleResendCode}
+                                disabled={resendLoading}
+                                className="text-primary hover:text-primary-dark font-medium disabled:opacity-50"
+                            >
+                                {resendLoading ? 'Sending...' : 'Resend Code'}
+                            </button>
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            <Link to="/signin" className="text-primary hover:text-primary-dark font-medium">
+                                Back to Sign In
+                            </Link>
+                        </p>
                     </div>
-
-                    {/* After otp code */}
-                    {/* <div className="flex justify-start items-center gap-4 my-3 after-code">
-                        {[0, 1, 2, 3].map((i) => (
-                        <input
-                            key={i}
-                            type="text"
-                            maxLength={1}
-                            ref={(el) => (inputsRef.current[i] = el)}
-                            onChange={(e) => handleChange(e, i)}
-                            className="otp-input"
-                        />
-                        ))}
-                        <FaCheck size={25} className='text-sucess-400' />
-                    </div> */}
-
-                    {/* Wrong otp code */}
-                    {/* <div className="flex justify-start items-center gap-4 my-3 wrong-otp">
-                        {[0, 1, 2, 3].map((i) => (
-                        <input
-                            key={i}
-                            type="text"
-                            maxLength={1}
-                            ref={(el) => (inputsRef.current[i] = el)}
-                            onChange={(e) => handleChange(e, i)}
-                            className="otp-input"
-                        />
-                        ))}
-                        <IoClose size={25} className='text-warning' />
-                    </div> */}
-
-                    <div className='flex flex-col'>
-                        <div>
-                            <p className="text-13 font-medium text-primary dark:text-gray-500">
-                                Code expires in: <span className="font-semibold">00:{timer.toString().padStart(2, "0")}</span>
-                            </p>
-                            <a href='' className="text-13 text-disable font-medium hover:underline text-left" disabled={timer !== 0}>
-                                Resend code
-                            </a>
-                        </div>
-
-                        {/* <div>
-                            <p className="text-13 font-medium text-secondary">
-                                Code expired
-                            </p>
-                            <a href='' className="text-13 text-darkbtn font-medium hover:underline text-left" disabled={timer !== 0}>
-                                Resend code
-                            </a>
-                        </div> */}
-                    </div>
-
                 </div>
             </div>
 
             <AuthFooter />
         </div>
-    )
-}
+    );
+};
 
-export default OtpCode
+export default OtpCode;
