@@ -3,17 +3,52 @@ import Footer from '../components/layout/Footer';
 import { globeIcon } from "../components/common/icons";
 import { TbSearch } from "react-icons/tb";
 import SearchDomainCard from '../components/domain/search-domain-card'
-// import NoDomainAvailable from '../components/domain/no-domain-available'
+import NoDomainAvailable from '../components/domain/no-domain-available'
 import FindMoreOptions from '../components/domain/find-more-options'
 import ContactInfo from '../components/domain/contact-info'
+import NoDomain from './NoDomain';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
+import { useDomainSearch } from '../hooks/useDomainSearch';
 
 const Domain = () => {
+	const [searchParams] = useSearchParams();
+	const [domainName, setDomainName] = useState('apple.kitchen');
+	const [searchResults, setSearchResults] = useState(null);
+	const [loading, setLoading] = useState(false);
+	const { searchDomain } = useDomainSearch();
+
+	useEffect(() => {
+		const domain = searchParams.get('domain');
+		if (domain) {
+			setDomainName(domain);
+			handleDomainSearch(domain);
+		}
+	}, [searchParams]);
+
+	const handleDomainSearch = async (domain) => {
+		if (!domain) return;
+		setLoading(true);
+		try {
+			const result = await searchDomain(domain);
+			setSearchResults(result);
+		} catch (error) {
+			console.error('Domain search failed:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleSearch = () => {
+		handleDomainSearch(domainName);
+	};
+
 	return (
-		<div> 
+		<div>
 			<Navbar />
 			<div className='px-5 mb-10'>
 				<div className='search-section w-full'>
-					<img src={globeIcon} alt="globe" title='globe' className='globe-image dark:opacity-5'/>
+					<img src={globeIcon} alt="globe" title='globe' className='globe-image dark:opacity-5' />
 					{/* domain search */}
 					<div className='searcharea w-full text-center'>
 						<h2 className='mb-8'>Register a new domain</h2>
@@ -23,27 +58,41 @@ const Domain = () => {
 									type="text"
 									placeholder="Domain, Company Name, Keyword..."
 									className='search-input w-full'
+									value={domainName}
+									onChange={(e) => setDomainName(e.target.value)}
+									onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
 								/>
-								<button className='btn-blue'>
-									<TbSearch size={14} />
+								<button 
+									className='btn-blue' 
+									onClick={handleSearch}
+									disabled={loading}
+								>
+									{loading ? (
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+									) : (
+										<TbSearch size={14} />
+									)}
 								</button>
 							</div>
 
 						</div>
-						
-                        {/* search domain card */}
-                        <SearchDomainCard />
 
-						{/* No domain availabel */}
-						{/* <NoDomainAvailable /> */}
+						{/* search domain card */}
+						{searchResults && searchResults.responseData?.available ? (
+							<SearchDomainCard domainData={searchResults.responseData} domainName={domainName} />
+						) : searchResults && !searchResults.responseData?.available ? (
+							<NoDomainAvailable domainName={domainName} />
+						) : (
+							<SearchDomainCard />
+						)}
 					</div>
 				</div>
 
-                {/* Find more options */}
-                <FindMoreOptions />
+				{/* Find more options */}
+				<FindMoreOptions />
 
-                {/* contact info */}
-                <ContactInfo />
+				{/* contact info */}
+				<ContactInfo />
 			</div>
 			<Footer />
 		</div>

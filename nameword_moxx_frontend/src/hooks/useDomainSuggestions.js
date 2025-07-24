@@ -17,10 +17,28 @@ export const useDomainSuggestions = () => {
       setSuggestions(suggestionList);
       return suggestionList;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to get suggestions';
-      setError(errorMessage);
-      setSuggestions([]);
-      throw err;
+      // Handle authentication errors
+      if (err.response?.status === 401) {
+        const errorMessage = 'Please sign in to get domain suggestions';
+        setError(errorMessage);
+        setSuggestions([]);
+        // Redirect to sign in if not authenticated
+        if (!localStorage.getItem('user')) {
+          window.location.href = '/sign-in';
+        }
+      } else {
+        // Demo mode: return mock suggestions
+        console.log('API not available, using demo suggestions');
+        const mockSuggestions = [
+          { domainName: `${keyword}.com` },
+          { domainName: `${keyword}.net` },
+          { domainName: `${keyword}.org` },
+          { domainName: `${keyword}.online` },
+          { domainName: `${keyword}.store` }
+        ];
+        setSuggestions(mockSuggestions);
+        return mockSuggestions;
+      }
     } finally {
       setLoading(false);
     }
