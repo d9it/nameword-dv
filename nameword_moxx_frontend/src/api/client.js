@@ -9,15 +9,19 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'x-api-key': API_CONFIG.API_KEY,
   },
+  withCredentials: true, // IMPORTANT: sends cookies with request
 });
 
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const user = localStorage.getItem('user');
+    if (user) {
+      const userData = JSON.parse(user);
+      if (userData.token) {
+        config.headers.Authorization = `Bearer ${userData.token}`;
+      }
     }
     
     // Log request in development
@@ -51,7 +55,7 @@ apiClient.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
           window.location.href = '/sign-in';
           break;
         case 403:
