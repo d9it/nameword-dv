@@ -5,6 +5,7 @@ import { TbSearch } from "react-icons/tb";
 import { useState, useEffect } from 'react';
 import { useDomainSearch } from '../hooks/useDomainSearch';
 import { useDomainSuggestions } from '../hooks/useDomainSuggestions';
+import { NavLink } from 'react-router';
 
 const Home = () => {
 	const [dropdown, setDropDown] = useState(false);
@@ -81,7 +82,7 @@ const Home = () => {
 									className='search-input w-full'
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									onFocus={() => suggestions.length > 0 && setDropDown(true)}
+									onFocus={() =>setDropDown(true)}
 									onBlur={() => setTimeout(() => setDropDown(false), 200)}
 									onKeyPress={handleKeyPress}
 									disabled={searchLoading}
@@ -138,28 +139,30 @@ const Home = () => {
 							)}
 
 							{/* dropdown menu */}
-							{dropdown && suggestions.length > 0 && (
+							{dropdown && (
 								<div className='search-list'>
 									<ul>
-										{suggestions.map((suggestion, index) => (
-											<li key={index}>
-												<button
-													onClick={() => handleSuggestionClick(suggestion)}
-													className="w-full text-left text-primary dark:text-gray-500 text-15 font-medium p-4 hover:bg-hover dark:hover:bg-gray-800 dark:hover:text-white block rounded"
-												>
-													{suggestion.domainName} - ${suggestion.price}
-												</button>
-											</li>
-										))}
+										{suggestions.length > 0 ? (
+											suggestions.map((suggestion, index) => (
+												<li key={index}>
+													<NavLink to={`/domain?domain=${suggestion.domainName}`}>
+														{suggestion.domainName}
+													</NavLink>
+												</li>
+											))
+										) : (
+											<>
+												<li><NavLink to="/no-domain">apple.com</NavLink></li>
+												<li><NavLink to='/domain'>apple.kitchen</NavLink></li>
+												<li><a href='#'>apple.free</a></li>
+												<li><a href='#'>apple.buy</a></li>
+												<li><a href='#'>apple.box</a></li>
+											</>
+										)}
 									</ul>
 									<div className='flex items-center gap-2.5 px-4 text-sm font-medium mt-2'>
-										<p className='text-lightgray-500'>{suggestions.length} suggestions</p>
-										<button 
-											onClick={() => setDropDown(false)}
-											className='text-darkbtn dark:text-gray-200 hover:underline'
-										>
-											Close
-										</button>
+										<p className='text-lightgray-500'>{suggestions.length || 5} suggestions</p>
+										<a href='#' className='text-darkbtn hover:text-darkbtn-hover'>See all</a>
 									</div>
 								</div>
 							)}

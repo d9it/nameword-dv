@@ -5,8 +5,42 @@ import { TbSearch } from "react-icons/tb";
 import NoDomainAvailable from '../components/domain/no-domain-available'
 import FindMoreOptions from '../components/domain/find-more-options'
 import ContactInfo from '../components/domain/contact-info'
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
+import { useDomainSearch } from '../hooks/useDomainSearch';
 
 const NoDomain = () => {
+	const [searchParams] = useSearchParams();
+	const [domainName, setDomainName] = useState('apple.com');
+	const [searchResults, setSearchResults] = useState(null);
+	const [loading, setLoading] = useState(false);
+	const { searchDomain } = useDomainSearch();
+
+	useEffect(() => {
+		const domain = searchParams.get('domain');
+		if (domain) {
+			setDomainName(domain);
+			handleDomainSearch(domain);
+		}
+	}, [searchParams]);
+
+	const handleDomainSearch = async (domain) => {
+		if (!domain) return;
+		setLoading(true);
+		try {
+			const result = await searchDomain(domain);
+			setSearchResults(result);
+		} catch (error) {
+			console.error('Domain search failed:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleSearch = () => {
+		handleDomainSearch(domainName);
+	};
+
 	return (
 		<div> 
 			<Navbar />
@@ -22,16 +56,27 @@ const NoDomain = () => {
 									type="text"
 									placeholder="Domain, Company Name, Keyword..."
 									className='search-input w-full'
+									value={domainName}
+									onChange={(e) => setDomainName(e.target.value)}
+									onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
 								/>
-								<button className='btn-blue'>
-									<TbSearch size={14} />
+								<button 
+									className='btn-blue' 
+									onClick={handleSearch}
+									disabled={loading}
+								>
+									{loading ? (
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+									) : (
+										<TbSearch size={14} />
+									)}
 								</button>
 							</div>
 
 						</div>
 						
 						{/* No domain availabel */}
-						<NoDomainAvailable />
+						<NoDomainAvailable domainName={domainName} />
 					</div>
 				</div>
 
