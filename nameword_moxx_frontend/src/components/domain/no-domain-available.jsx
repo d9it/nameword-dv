@@ -2,8 +2,9 @@ import { RiGlobalLine } from "react-icons/ri";
 import { FiInfo } from "react-icons/fi";
 import { MdCheck } from "react-icons/md";
 import { cart } from "../common/icons";
+import { NavLink } from "react-router";
 
-const noDomainAvailable = () => {
+const noDomainAvailable = ({ domainName = 'apple.com' }) => {
     return (
         <div className='max-w-5xl mx-auto'>
             {/* search domain card */}
@@ -13,8 +14,8 @@ const noDomainAvailable = () => {
                     <div className='flex items-center justify-between gap-3'>
                         <h2 className='flex flex-wrap items-center card-title'>
                             <RiGlobalLine className='mr-1.5 text-lg' />
-                            <span className='text-primary dark:text-gray-500'>apple</span>
-                            <span className='text-darkbtn dark:text-white'>.com</span>
+                            <span className='text-primary dark:text-gray-500'>{domainName.split('.')[0]}</span>
+                            <span className='text-darkbtn dark:text-white'>.{domainName.split('.')[1]}</span>
                         </h2>
                         <button className='btn-teal'>Domain Taken</button>
                     </div>
@@ -40,9 +41,9 @@ const noDomainAvailable = () => {
                     </div>
 
                     <div className='flex justify-start mt-5'>
-                        <a href='#' className='add-to-cart'>
+                        <NavLink to='/add-to-cart' className='add-to-cart'>
                             <img src={cart} alt="add-to-cart" title="" /> Add to Cart
-                        </a>
+                        </NavLink>
                     </div>
 
                     <hr className='card-divider my-6' />
